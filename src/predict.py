@@ -19,12 +19,13 @@ features = [
     "FamilySize",
     "IsAlone",
     "Embarked",
-    "Title"
+    "Title",
+    "Deck"
 ]
 
 
 X_test = test[features]
-print(X_test.isnull().sum())
+
 
 X_test = pd.get_dummies(X_test)
 
@@ -52,7 +53,7 @@ model = joblib.load(
 
 predictions = model.predict(X_test).astype(int)
 
-print(pd.Series(predictions).value_counts())
+
 submission = pd.DataFrame({
     "PassengerId": test["PassengerId"],
     "Survived": predictions

@@ -6,9 +6,12 @@ def preprocess_data(train, test):
     train = train.copy()
     test = test.copy()
 
-    combined = pd.concat([train, test])
+    for df in [train, test]:
 
-    for df in [combined]:
+        df["FamilySize"] = df["SibSp"] + df["Parch"] + 1
+
+        df["IsAlone"] = 0
+        df.loc[df["FamilySize"] == 1, "IsAlone"] = 1
 
         df["Title"] = df["Name"].str.extract(
             " ([A-Za-z]+)\.",
@@ -39,45 +42,7 @@ def preprocess_data(train, test):
             }
         )
 
-        df["FamilySize"] = (
-            df["SibSp"] +
-            df["Parch"] +
-            1
-        )
-
-        df["IsAlone"] = 0
-        df.loc[df["FamilySize"] == 1, "IsAlone"] = 1
-
-
-    def fill_age(row):
-        if pd.isnull(row["Age"]):
-            return combined.groupby(
-                ["Sex", "Pclass"]
-            )["Age"].median()[
-                row["Sex"],
-                row["Pclass"]
-            ]
-        return row["Age"]
-
-    combined["Age"] = combined.apply(
-        fill_age,
-        axis=1
-    )
-    combined["Fare"] = combined["Fare"].fillna(
-        combined["Fare"].median()
-    )
-    for index, row in combined.iterrows():
-
-        if pd.isnull(row["Age"]):
-
-            combined.loc[index, "Age"] = age_medians[
-                row["Sex"],
-                row["Pclass"],
-                row["Title"]
-            ]
-
-
-    train = combined.iloc[:len(train)]
-    test = combined.iloc[len(train):]
+        df["Deck"] = df["Cabin"].str[0]
+        df["Deck"] = df["Deck"].fillna("U")
 
     return train, test

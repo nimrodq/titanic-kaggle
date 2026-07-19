@@ -2,7 +2,6 @@ import pandas as pd
 import joblib
 
 from sklearn.model_selection import train_test_split
-#from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score
 
@@ -11,6 +10,7 @@ from preprocess import preprocess_data
 
 train = pd.read_csv("data/train.csv")
 test = pd.read_csv("data/test.csv")
+
 
 train, test = preprocess_data(train, test)
 
@@ -23,7 +23,8 @@ features = [
     "FamilySize",
     "IsAlone",
     "Embarked",
-    "Title"
+    "Title",
+    "Deck"
 ]
 
 
@@ -32,6 +33,7 @@ y = train["Survived"]
 
 
 X = pd.get_dummies(X)
+
 
 X = X.fillna(
     X.median(numeric_only=True)
@@ -51,12 +53,6 @@ X_train, X_valid, y_train, y_valid = train_test_split(
     random_state=42
 )
 
-
-""" model = RandomForestClassifier(
-    n_estimators=200,
-    max_depth=5,
-    random_state=42
-) """
 
 model = LogisticRegression(
     max_iter=1000
