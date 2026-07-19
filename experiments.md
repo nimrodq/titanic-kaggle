@@ -1,7 +1,9 @@
 # Titanic Experiments
 
-| Experiment | Model | Score |
-|---|---|---|
+| Experiment | Public Score |
+|---|---:|
+| Logistic Regression baseline | 0.77751 |
+| Logistic Regression C=0.5 liblinear | 0.77990 |
 | Baseline | Logistic Regression + FamilySize + IsAlone + Title | 0.77751 |
 | Rare Titles + FarePerPerson | Logistic Regression | 0.77511 |
 | Random Forest | Random Forest | 0.77751 |
