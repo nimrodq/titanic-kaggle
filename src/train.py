@@ -1,3 +1,4 @@
+import joblib
 import pandas as pd
 
 from sklearn.model_selection import train_test_split
@@ -46,6 +47,13 @@ model.fit(
     X_train,
     y_train
 )
+
+joblib.dump(
+    model,
+    "outputs/titanic_model.pkl"
+)
+
+print("Model saved!")
 
 predictions = model.predict(X_valid)
 
