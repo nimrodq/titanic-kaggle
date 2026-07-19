@@ -30,6 +30,11 @@ y = train["Survived"]
 
 X = pd.get_dummies(X)
 
+joblib.dump(
+    X.columns.tolist(),
+    "outputs/model_columns.pkl"
+)
+
 X = X.fillna(X.median(numeric_only=True))
 
 X_train, X_valid, y_train, y_valid = train_test_split(
