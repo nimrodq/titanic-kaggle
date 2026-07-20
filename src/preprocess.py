@@ -55,74 +55,298 @@ def fill_age(df):
 
 
 def preprocess_data(train, test):
+    """
+    Clean Titanic data and create features.
+    """
+
     train = train.copy()
     test = test.copy()
 
-    train["is_train"] = 1
-    test["is_train"] = 0
+    # Create FamilySize
+    for df in [train, test]:
+        df["FamilySize"] = df["SibSp"] + df["Parch"] + 1
 
-    combined = pd.concat([train, test], ignore_index=True, sort=False)
+    # Create IsAlone
+    for df in [train, test]:
+        df["IsAlone"] = 0
+        df.loc[df["FamilySize"] == 1, "IsAlone"] = 1
 
-    combined["Title"] = combined["Name"].apply(extract_title)
+    # Extract title from name
+    for df in [train, test]:
+        df["Title"] = df["Name"].str.extract(
+            " ([A-Za-z]+)\.",
+            expand=False
+        )
 
-    combined["FamilySize"] = (
-        combined["SibSp"] +
-        combined["Parch"] +
-        1
+
+        df["Title"] = df["Title"].replace({
+
+            "Mlle": "Miss",
+            "Ms": "Miss",
+            "Mme": "Mrs",
+
+            "Lady": "Royalty",
+            "Countess": "Royalty",
+            "Sir": "Royalty",
+            "Don": "Royalty",
+            "Dona": "Royalty",
+            "Jonkheer": "Royalty",
+
+            "Capt": "Officer",
+            "Col": "Officer",
+            "Major": "Officer",
+            "Dr": "Officer",
+            "Rev": "Officer"
+
+        })
+
+
+        # Cabin information
+        df["Deck"] = (
+            df["Cabin"]
+            .str[0]
+            .fillna("U")
+        )
+
+
+        df["CabinKnown"] = (
+            df["Cabin"]
+            .notna()
+            .astype(int)
+        )
+
+
+
+    # ==========================
+    # Surname Feature
+    # ==========================
+
+    """ surname_counts = pd.concat(
+        [
+            train["Surname"],
+            test["Surname"]
+        ]
+    ).value_counts() """
+
+
+    """ train["SurnameCount"] = (
+        train["Surname"]
+        .map(surname_counts)
+        .fillna(1)
+    ) """
+
+
+    """ test["SurnameCount"] = (
+        test["Surname"]
+        .map(surname_counts)
+        .fillna(1)
+    ) """
+
+
+
+    # Remove raw surname
+    train.drop(
+        columns=["Surname"],
+        inplace=True
     )
 
-    combined["IsAlone"] = (
-        combined["FamilySize"] == 1
-    ).astype(int)
-
-    combined["FamilyGroup"] = combined["FamilySize"].apply(family_group)
-
-    combined["Fare"] = combined["Fare"].fillna(
-        combined["Fare"].median()
+    test.drop(
+        columns=["Surname"],
+        inplace=True
     )
 
-    combined["Embarked"] = combined["Embarked"].fillna(
-        combined["Embarked"].mode()[0]
+
+
+    # ==========================
+    # Age Imputation
+    # ==========================
+
+    train["Age"] = train.groupby(
+        "Title"
+    )["Age"].transform(
+        lambda x: x.fillna(
+            x.median()
+        )
     )
 
-    combined = fill_age(combined)
 
-    combined["FarePerPerson"] = (
-        combined["Fare"] /
-        combined["FamilySize"]
+    title_age = (
+        train.groupby("Title")["Age"]
+        .median()
     )
 
-    combined["TicketPrefix"] = (
-        combined["Ticket"]
-        .str.replace(r"[0-9]", "", regex=True)
-        .str.replace(r"[./]", "", regex=True)
-        .str.replace(" ", "")
+
+    test["Age"] = test.apply(
+
+        lambda row:
+
+            title_age[row["Title"]]
+            if pd.isna(row["Age"])
+            and row["Title"] in title_age.index
+
+            else row["Age"],
+
+        axis=1
+
     )
 
-    combined["TicketPrefix"] = combined["TicketPrefix"].replace(
-        "",
-        "NONE"
+
+    overall_age = train["Age"].median()
+
+
+    train["Age"] = train["Age"].fillna(
+        overall_age
     )
 
-    train = (
-        combined[combined["is_train"] == 1]
-        .drop(columns=["is_train"])
-        .reset_index(drop=True)
+
+    test["Age"] = test["Age"].fillna(
+        overall_age
     )
 
-    test = (
-        combined[combined["is_train"] == 0]
-        .drop(columns=["is_train", "Survived"])
-        .reset_index(drop=True)
+
+
+    # ==========================
+    # Woman Child
+    # ==========================
+
+    for df in [train, test]:
+
+        # Female or child passengers
+        df["WomanChild"] = (
+            (df["Sex"] == "female")
+            |
+            (df["Age"] < 16)
+        ).astype(int)
+
+    # ==========================
+    # Fare Processing
+    # ==========================
+
+    train["Fare"] = train["Fare"].fillna(
+        train["Fare"].median()
     )
+
+
+    test["Fare"] = test["Fare"].fillna(
+        train["Fare"].median()
+    )
+
+
+    for df in [train, test]:
+
+        df["FarePerPerson"] = (
+
+            df["Fare"] /
+            df["FamilySize"].clip(lower=1)
+
+        )
+
+
+
+    # ==========================
+    # Embarked
+    # ==========================
+
+    train["Embarked"] = train["Embarked"].fillna(
+        train["Embarked"].mode()[0]
+    )
+
+
+    test["Embarked"] = test["Embarked"].fillna(
+        train["Embarked"].mode()[0]
+    )
+
+
+
+    # ==========================
+    # Age Band
+    # ==========================
+
+    for df in [train, test]:
+
+        df["AgeBand"] = pd.cut(
+
+            df["Age"],
+
+            bins=[
+                0,
+                16,
+                32,
+                48,
+                64,
+                100
+            ],
+
+            labels=False,
+
+            include_lowest=True
+
+        )
+
+
+
+    # ==========================
+    # Fare Band
+    # ==========================
+
+    train["FareBand"] = pd.qcut(
+
+        train["Fare"],
+
+        4,
+
+        labels=False,
+
+        duplicates="drop"
+
+    )
+
+
+    fare_bins = train["Fare"].quantile(
+        [
+            0,
+            0.25,
+            0.5,
+            0.75,
+            1
+        ]
+    ).values
+
+
+
+    test["FareBand"] = pd.cut(
+
+        test["Fare"],
+
+        bins=fare_bins,
+
+        labels=False,
+
+        include_lowest=True,
+
+        duplicates="drop"
+
+    )
+
+
+    test["FareBand"] = test["FareBand"].fillna(
+        train["FareBand"].median()
+    )
+
+
 
     return train, test
 
-
 if __name__ == "__main__":
+
     train = pd.read_csv("data/train.csv")
     test = pd.read_csv("data/test.csv")
 
-    train, test = preprocess_data(train, test)
+    train, test = preprocess_data(
+        train,
+        test
+    )
+
 
     print(train.head())
+    print(train.columns)
