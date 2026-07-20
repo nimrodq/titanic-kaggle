@@ -3,7 +3,6 @@ import joblib
 
 from preprocess import preprocess_data
 
-
 train = pd.read_csv("data/train.csv")
 test = pd.read_csv("data/test.csv")
 
@@ -14,34 +13,29 @@ features = [
     "Sex",
     "Age",
     "Fare",
+    "Embarked",
+    "Title",
     "FamilySize",
     "IsAlone",
-    "Embarked",
-    "Title"
+    "FamilyGroup",
+    "FarePerPerson",
+    "TicketPrefix"
 ]
 
 X_test = test[features]
 
 X_test = pd.get_dummies(X_test)
 
-X_test = X_test.fillna(
-    X_test.median(numeric_only=True)
-)
-
-model = joblib.load(
-    "outputs/titanic_model.pkl"
-)
-
-model_columns = joblib.load(
-    "outputs/model_columns.pkl"
-)
+columns = joblib.load("outputs/model_columns.pkl")
 
 X_test = X_test.reindex(
-    columns=model_columns,
+    columns=columns,
     fill_value=0
 )
 
-predictions = model.predict(X_test)
+model = joblib.load("outputs/titanic_model.pkl")
+
+predictions = model.predict(X_test).astype(int)
 
 submission = pd.DataFrame({
     "PassengerId": test["PassengerId"],
@@ -54,3 +48,4 @@ submission.to_csv(
 )
 
 print("Submission created!")
+print(pd.Series(predictions).value_counts())

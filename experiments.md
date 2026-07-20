@@ -2,30 +2,33 @@
 
 ## Project Overview
 
-This project builds a machine learning pipeline for the Kaggle Titanic competition.
+This project builds a complete machine learning pipeline for the Kaggle Titanic competition.
 
 The workflow includes:
 
-* Data preprocessing
-* Feature engineering
-* Model training
-* Validation testing
-* Kaggle submission generation
+- Data preprocessing
+- Feature engineering
+- Model training
+- Hyperparameter tuning
+- Cross-validation
+- Kaggle submission generation
+- Experiment tracking using Git
 
 ---
 
 # Experiment Results
 
-| Experiment            | Model               | Features / Changes                                           | Kaggle Public Score |
-| --------------------- | ------------------- | ------------------------------------------------------------ | ------------------: |
-| Baseline              | Logistic Regression | Pclass, Sex, Age, Fare, FamilySize, IsAlone, Embarked, Title |             0.77751 |
-| Feature Experiment    | Logistic Regression | Added Rare Title handling + FarePerPerson                    |             0.77511 |
-| Model Experiment      | Random Forest       | Same baseline features                                       |             0.77751 |
-| Feature Experiment    | Logistic Regression | Age imputation improvements                                  |             0.77511 |
-| Feature Experiment    | Logistic Regression | Added Cabin Deck feature                                     |             0.76794 |
-| Model Experiment      | Gradient Boosting   | Age bands, Fare bands, TicketGroup, Deck, extra features     |             0.76555 |
-| Hyperparameter Tuning | Logistic Regression | C=0.5, solver=liblinear                                      |         **0.77990** |
-| Feature Experiment    | Logistic Regression | Added TicketGroup + HasCabin                                 |             0.77751 |
+| Experiment | Model | Changes | Public Kaggle Score |
+|------------|-------|---------|--------------------:|
+| Baseline | Logistic Regression | Pclass, Sex, Age, Fare, FamilySize, IsAlone, Embarked, Title | **0.77751** |
+| Feature Engineering | Logistic Regression | Added Rare Title handling + FarePerPerson | 0.77511 |
+| Model Comparison | Random Forest | Same baseline features | 0.77751 |
+| Feature Engineering | Logistic Regression | Improved Age imputation | 0.77511 |
+| Feature Engineering | Logistic Regression | Added Cabin Deck feature | 0.76794 |
+| Model Comparison | Gradient Boosting | Age bands, Fare bands, TicketGroup, Deck and additional engineered features | 0.76555 |
+| Hyperparameter Tuning | Logistic Regression | C=0.5, solver=liblinear | **0.77990** ✅ |
+| Feature Engineering | Logistic Regression | Added TicketGroup + HasCabin | 0.77751 |
+| Ensemble Learning | Soft Voting Classifier | Logistic Regression + Random Forest + Gradient Boosting with 5-Fold Stratified Cross-Validation | 0.77751 |
 
 ---
 
@@ -33,32 +36,58 @@ The workflow includes:
 
 ## Logistic Regression
 
-Parameters:
+### Parameters
 
-```text
+```
 C = 0.5
 solver = liblinear
 max_iter = 1000
 ```
 
-Features:
+### Features
 
-```text
-Pclass
-Sex
-Age
-Fare
-FamilySize
-IsAlone
-Embarked
-Title
+- Pclass
+- Sex
+- Age
+- Fare
+- FamilySize
+- IsAlone
+- Embarked
+- Title
+
+### Best Public Kaggle Score
+
+**0.77990**
+
+---
+
+# Cross-Validation Experiment
+
+To evaluate a more robust machine learning workflow, a Soft Voting Ensemble was tested.
+
+## Models
+
+- Logistic Regression
+- Random Forest
+- Gradient Boosting
+
+## Validation Method
+
+- Stratified 5-Fold Cross-Validation
+
+## Cross-Validation Scores
+
+```
+Fold 1 : 0.83799
+Fold 2 : 0.81461
+Fold 3 : 0.83146
+Fold 4 : 0.83146
+Fold 5 : 0.84831
 ```
 
-Best Kaggle Public Score:
+**Mean Cross-Validation Accuracy: 0.8328**
 
-```text
-0.77990
-```
+Although the ensemble achieved a higher cross-validation accuracy than the Logistic Regression model, its Kaggle public leaderboard score (0.77751) was lower than the tuned Logistic Regression model (0.77990). This demonstrates that better validation performance does not always translate into better generalization on unseen test data.
 
 ---
 
@@ -66,27 +95,30 @@ Best Kaggle Public Score:
 
 ## Title Extraction
 
-Extracted titles from passenger names:
+Extracted passenger titles from names.
+
+Grouped uncommon titles into a single **Rare** category.
 
 Examples:
 
-```text
-Mr
-Mrs
-Miss
-Master
-Rare
-```
+- Mr
+- Mrs
+- Miss
+- Master
+- Rare
 
-Rare titles were grouped together:
+Rare titles included:
 
-```text
-Dr
-Rev
-Sir
-Lady
-Major
-```
+- Dr
+- Rev
+- Lady
+- Major
+- Sir
+- Countess
+- Capt
+- Col
+- Don
+- Jonkheer
 
 ---
 
@@ -94,37 +126,35 @@ Major
 
 Created:
 
-```python
+```
 FamilySize = SibSp + Parch + 1
 ```
 
-This captures the size of a passenger's travelling group.
+This captures the total travelling group size.
 
 ---
 
-## Is Alone
+## IsAlone
 
 Created:
 
-```python
-IsAlone = FamilySize == 1
+```
+IsAlone = (FamilySize == 1)
 ```
 
-Passengers travelling alone had different survival patterns.
+Passengers travelling alone exhibited different survival patterns.
 
 ---
 
-## Ticket Group Size
+## Ticket Group
 
-Tested:
+Created:
 
-```python
-TicketGroup
+```
+TicketGroup = Number of passengers sharing the same ticket
 ```
 
-Number of passengers sharing the same ticket.
-
-This did not improve the final leaderboard score.
+Did not improve leaderboard performance.
 
 ---
 
@@ -132,69 +162,109 @@ This did not improve the final leaderboard score.
 
 Tested:
 
-```python
-Deck
-HasCabin
-```
+- Deck
+- HasCabin
 
-These features reduced leaderboard performance compared to the tuned baseline.
+Neither feature improved the final Kaggle score.
 
 ---
 
-# Models Tested
+# Models Evaluated
 
 ## Logistic Regression
 
-Best performing model.
-
 Advantages:
 
-* Works well on small datasets
-* Less prone to overfitting
-* Fast training
+- Strong baseline for small datasets
+- Fast to train
+- Less prone to overfitting
+- Best leaderboard performance
+
+Public Score:
+
+**0.77990**
 
 ---
 
 ## Random Forest
 
-Result:
+Advantages:
 
-```text
-0.77751
-```
+- Captures nonlinear relationships
+- Handles feature interactions
 
-Did not outperform Logistic Regression.
+Public Score:
+
+**0.77751**
 
 ---
 
 ## Gradient Boosting
 
+Advantages:
+
+- Powerful nonlinear learner
+
 Result:
 
-```text
-0.76555
-```
+Performed worse than Logistic Regression on the hidden Kaggle test set.
 
-The additional complexity did not generalize better.
+Public Score:
+
+**0.76555**
+
+---
+
+## Soft Voting Ensemble
+
+Components:
+
+- Logistic Regression
+- Random Forest
+- Gradient Boosting
+
+Validation:
+
+- 5-Fold Stratified Cross-Validation
+
+Mean CV Accuracy:
+
+**0.8328**
+
+Public Kaggle Score:
+
+**0.77751**
+
+The ensemble achieved the highest validation accuracy but did not outperform the tuned Logistic Regression model on Kaggle, indicating slight overfitting to the training data.
+
+---
+
+# Lessons Learned
+
+This project highlighted several important machine learning principles:
+
+- Simpler models can outperform more complex models on small datasets.
+- Feature engineering should be validated experimentally rather than assumed to improve performance.
+- Hyperparameter tuning provided the largest improvement (+0.00239 leaderboard score).
+- Cross-validation offers a more reliable estimate of model performance, but higher validation accuracy does not always lead to a higher public leaderboard score.
+- Reproducible experiments and version control made it easy to compare different approaches and restore the best-performing model.
 
 ---
 
 # Final Conclusion
 
-The best-performing approach was a simple Logistic Regression model with tuned regularization.
+The final selected model is:
 
-Additional feature engineering and more complex models did not improve leaderboard performance.
+**Logistic Regression**
 
-Final selected model:
-
-```text
-Logistic Regression
-C=0.5
-solver=liblinear
+```
+C = 0.5
+solver = liblinear
+max_iter = 1000
 ```
 
-Final Kaggle Public Score:
+Final Public Kaggle Score:
 
-```text
-0.77990
-```
+# **0.77990**
+
+While more sophisticated approaches such as Gradient Boosting and Soft Voting Ensembles were explored, the tuned Logistic Regression model consistently provided the best balance between simplicity, generalization, and leaderboard performance.
