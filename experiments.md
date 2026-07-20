@@ -1,48 +1,98 @@
 # Titanic Model Experiments
 
-This document records the experiments conducted during development of the Titanic survival prediction model.
+This document records the machine learning experiments conducted while developing my Titanic survival prediction model.
 
-## Saved Artifacts
+## Learning Project Disclaimer
 
-`titanic_model.pkl`
+This is my **first machine learning test project** as a beginner/student learning data science.
 
-Trained CatBoost model used for inference.
+The purpose of this project was to understand the complete machine learning workflow:
 
-`model_columns.pkl`
+* Data preprocessing
+* Feature engineering
+* Model comparison
+* Cross-validation
+* Hyperparameter tuning
+* Model evaluation
+* Prediction generation
 
-Stores feature ordering to ensure prediction consistency.
+This project was developed with significant assistance from **AI tools**, which were used for:
+
+* Understanding machine learning concepts
+* Debugging errors
+* Suggesting improvements
+* Explaining model behaviour
+* Exploring feature engineering ideas
+
+The main goal was learning and experimentation rather than creating a production-level model.
+
+---
+
+# Saved Artifacts
+
+## `titanic_model.pkl`
+
+Contains the final trained machine learning model selected from experiments.
+
+Current best model:
+
+```text
+CatBoostClassifier
+```
+
+---
+
+## `model_columns.pkl`
+
+Stores the final feature column order after encoding.
+
+This ensures that training and prediction data use the same feature structure.
+
+---
+
+## `threshold.pkl`
+
+Stores the classification threshold used during prediction.
+
+Current threshold:
+
+```text
+0.45
+```
+
+---
 
 # Experiment 1 - Baseline Model
 
 ## Objective
 
-Create a simple baseline model using basic passenger information.
+Create a simple baseline model using only basic passenger information.
 
 ## Model
 
+```text
 Logistic Regression
+```
 
 ## Features
 
 Initial features:
 
-- Pclass
-- Sex
-- Age
-- Fare
-- Embarked
-
+* Pclass
+* Sex
+* Age
+* Fare
+* Embarked
 
 ## Result
 
-Validation accuracy was approximately:
+Validation accuracy:
 
 ```text
-78%
+~78%
 ```
 
-The baseline model performed reasonably but struggled to capture nonlinear passenger relationships.
-
+The baseline model provided a starting point but was unable to capture more complex passenger survival patterns.
 
 ---
 
@@ -50,55 +100,82 @@ The baseline model performed reasonably but struggled to capture nonlinear passe
 
 ## Objective
 
-Improve model performance by creating additional passenger-based features.
-
+Improve prediction performance by creating more meaningful passenger features.
 
 ## Added Features
 
-### Family Features
+## Passenger Information
 
 Added:
 
-- FamilySize
-- FamilySizeGroup
-- IsAlone
+* Passenger Title extraction
+* Age handling based on passenger information
 
+Examples of extracted titles:
 
-### Passenger Features
+```text
+Mr
+Mrs
+Miss
+Master
+Officer
+Professional
+Royalty
+```
 
-Added:
+---
 
-- Title extraction
-- Age imputation by title
-
-
-### Cabin Features
-
-Added:
-
-- Deck
-- CabinKnown
-
-
-### Fare Features
+## Family Features
 
 Added:
 
-- FarePerPerson
-- FareBand
+* FamilySizeGroup
+* TicketGroupSize
 
+These features help capture relationships between passengers travelling together.
 
-### Ticket Features
+---
+
+## Cabin Features
 
 Added:
 
-- TicketGroupSize
+* CabinKnown
 
+This identifies whether cabin information exists.
 
-## Result
+---
 
-Feature engineering improved model performance by providing more meaningful passenger relationships.
+## Survival Pattern Feature
 
+Added:
+
+* WomanChild
+
+This feature combines gender and age information based on the historical evacuation priority:
+
+```text
+Women and children first
+```
+
+---
+
+## Removed Features
+
+During experimentation, some features were removed because they added noise or redundancy.
+
+Removed:
+
+* FamilySize
+* IsAlone
+* FareBand
+* SexClass
+* TitleClass
+* ChildClass
+
+Reason:
+
+These features either duplicated existing information or increased feature complexity without improving validation performance.
 
 ---
 
@@ -106,70 +183,85 @@ Feature engineering improved model performance by providing more meaningful pass
 
 ## Objective
 
-Compare different machine learning algorithms.
-
+Compare different machine learning algorithms on the engineered dataset.
 
 ## Models Tested
 
+---
 
-## Random Forest
-
-Advantages:
-
-- Handles nonlinear relationships
-- Robust against noise
-
-Validation Accuracy:
-
-```text
-~79%
-```
-
-
-## XGBoost
+# Logistic Regression
 
 Advantages:
 
-- Gradient boosting approach
-- Strong performance on structured datasets
+* Simple baseline model
+* Interpretable coefficients
+* Works well with encoded categorical variables
 
-Validation Accuracy:
+Result:
 
 ```text
-~81.5%
+~81.9% Cross Validation Accuracy
 ```
 
+---
 
-## LightGBM
+# Random Forest
 
 Advantages:
 
-- Efficient gradient boosting
-- Fast training
+* Handles nonlinear relationships
+* Robust ensemble method
 
-Validation Accuracy:
+Result:
 
 ```text
-~81%
+~83.4% Cross Validation Accuracy
 ```
 
+---
 
-## CatBoost
+# Extra Trees
 
 Advantages:
 
-- Strong categorical feature handling
-- Effective on small datasets
+* Similar to Random Forest
+* More randomised tree construction
 
-Validation Accuracy:
+Result:
 
 ```text
-82.1%
+~83.2% Cross Validation Accuracy
 ```
 
+---
 
-CatBoost achieved the best validation performance.
+# XGBoost
 
+Advantages:
+
+* Gradient boosting algorithm
+* Strong performance on structured datasets
+
+Result:
+
+```text
+~82.9% Cross Validation Accuracy
+```
+
+---
+
+# CatBoost
+
+Advantages:
+
+* Effective gradient boosting algorithm
+* Performs well on small tabular datasets
+
+Result:
+
+```text
+~83.8% Cross Validation Accuracy
+```
 
 ---
 
@@ -177,226 +269,264 @@ CatBoost achieved the best validation performance.
 
 ## Objective
 
-Improve model performance through parameter optimisation.
+Improve model performance by tuning important model parameters.
 
-
-## Method
-
-RandomizedSearchCV with cross validation.
-
-
-## Tuned Parameters
-
-
-### CatBoost
-
-- iterations
-- depth
-- learning rate
-- L2 regularisation
-
-
-### XGBoost
-
-- number of estimators
-- max depth
-- learning rate
-- subsampling
-
-
-### LightGBM
-
-- number of leaves
-- depth
-- regularisation
-
-
-### Random Forest
-
-- number of estimators
-- maximum depth
-- minimum samples
-
-
-## Result
-
-Best tuned model:
-
-```text
-CatBoostClassifier
-```
-
-Validation accuracy:
-
-```text
-82.1%
-```
-
+## Tuned Models
 
 ---
 
-# Experiment 5 - Cross Validation
+## Random Forest
+
+Parameters adjusted:
+
+* Number of estimators
+* Maximum depth
+* Minimum samples split
+* Minimum samples leaf
+
+Final settings:
+
+```text
+n_estimators = 1000
+max_depth = 6
+```
+
+---
+
+## XGBoost
+
+Parameters adjusted:
+
+* Number of estimators
+* Learning rate
+* Maximum depth
+* Subsampling
+* Regularisation
+
+---
+
+## CatBoost
+
+Parameters adjusted:
+
+* Iterations
+* Depth
+* Learning rate
+* L2 regularisation
+
+Final settings:
+
+```text
+iterations = 1000
+depth = 4
+learning_rate = 0.02
+l2_leaf_reg = 5
+```
+
+---
+
+# Experiment 5 - Stratified K-Fold Cross Validation
 
 ## Objective
 
-Verify that validation performance was not caused by a lucky train-validation split.
-
+Reduce the impact of a lucky or unlucky validation split.
 
 ## Method
 
-10-Fold Stratified Cross Validation
-
-
-## Result
+Used:
 
 ```text
-Mean Accuracy: 82.6%
+5-Fold Stratified Cross Validation
 ```
 
-
-The result confirmed that the model consistently achieves around 82% accuracy.
-
+Stratification ensures that each fold maintains a similar survival class distribution.
 
 ---
 
-# Experiment 6 - Feature Leakage Investigation
+## Result
 
-## Problem
+Final cross-validation results:
 
-Initial experiments showed:
+| Model               | Mean Accuracy |
+| ------------------- | ------------: |
+| Logistic Regression |        81.93% |
+| Random Forest       |        83.39% |
+| Extra Trees         |        83.16% |
+| XGBoost             |        82.94% |
+| CatBoost            |        83.84% |
 
-Validation:
+---
 
-```text
-82.6%
+# Experiment 6 - Feature Selection
+
+## Objective
+
+Reduce unnecessary complexity and improve generalisation.
+
+## Final Feature Set
+
+The final model uses:
+
+| Feature         |
+| --------------- |
+| Pclass          |
+| Sex             |
+| Age             |
+| Fare            |
+| Embarked        |
+| Title           |
+| FamilySizeGroup |
+| TicketGroupSize |
+| CabinKnown      |
+| WomanChild      |
+
+---
+
+## Feature Encoding
+
+Categorical features were converted using:
+
+```python
+pd.get_dummies(
+    drop_first=True
+)
 ```
 
-Kaggle:
-
-```text
-77.5%
-```
-
-
-A generalisation issue was suspected.
-
-
-## Removed Features
-
-
-## SurnameCount
-
-Previous implementation:
-
-```text
-Combined train and test surname counts
-```
-
-This used information from the hidden test distribution.
-
-
-## TicketGroupSize
-
-Previous implementation:
-
-```text
-Combined train and test ticket counts
-```
-
-This also used test distribution information.
-
-
-## Fix
-
-Changed statistical calculations to use training data only.
-
+This avoids the dummy variable trap by removing redundant categories.
 
 Example:
 
 Before:
 
 ```text
-train + test ticket counts
+Sex_female
+Sex_male
 ```
 
 After:
 
 ```text
-training ticket counts only
+Sex_male
 ```
 
+where:
 
-## Expected Impact
-
-The model should generalise better to unseen Kaggle test data.
+```text
+1 = Male
+0 = Female
+```
 
 ---
 
 # Current Best Model
 
-| Metric | Score |
-|---|---:|
-| Validation Accuracy | 82.1% |
-| 10-Fold CV Accuracy | 82.6% |
-| Kaggle Public Score | 77.99% |
+Final selected model:
+
+```text
+CatBoostClassifier
+```
+
+## Cross Validation Performance
+
+| Metric                |  Score |
+| --------------------- | -----: |
+| Mean CV Accuracy      | 83.84% |
+| CV Standard Deviation |  1.49% |
+
+---
+
+## Final Feature Importance
+
+Most influential features:
+
+| Feature         | Importance |
+| --------------- | ---------: |
+| Fare            |       High |
+| Age             |       High |
+| Title_Mr        |       High |
+| WomanChild      |       High |
+| Pclass          |       High |
+| TicketGroupSize |     Medium |
+| FamilySizeGroup |     Medium |
+| Sex_male        |     Medium |
+
+The results show that passenger characteristics such as age, gender, class, and economic status strongly influenced survival prediction.
+
+---
 
 # Experiment 7 - Error Analysis
 
 ## Objective
 
-Understand where the model fails.
+Understand where the model makes incorrect predictions.
 
-## Findings
+## Observations
 
-Most false negatives:
+The model struggles mainly with:
 
-- Male passengers
-- Third class passengers
-- Low fare passengers
+### False Negatives
 
-Most false positives:
+Passengers predicted not to survive but actually survived.
 
-- Female passengers travelling alone
-- Young passengers without family information
-- 
-# Future Experiments
+Common patterns:
 
-## Family Survival Features
+* Male passengers
+* Lower-class passengers
+* Passengers with limited information
 
-Planned feature engineering:
+---
 
-- Same surname survival
-- Same ticket survival
-- Family member outcomes
+### False Positives
 
+Passengers predicted to survive but did not.
+
+Common patterns:
+
+* Female passengers
+* Young passengers
+* Passengers without strong family/ticket indicators
+
+---
+
+# Future Learning Improvements
+
+Possible future experiments:
 
 ## Ensemble Methods
 
-Potential improvements:
+Explore:
 
-- Voting Classifier
-- Stacking Classifier
-
-## Feature Importance Analysis
-
-Permutation importance was performed on the final Logistic Regression model.
-
-The most influential feature was WomanChild, which combines gender and age information to capture the historical "women and children first" survival pattern.
-
-Other important features included:
-
-- FamilySizeGroup
-- Sex
-- Age
-- Fare
-- Passenger Title
-
-Some engineered features such as SurnameCount, TicketGroupSize and FarePerPerson showed negative importance, suggesting they introduced additional noise rather than improving prediction performance.
-
+* Voting Classifier
+* Stacking Classifier
 
 ## Explainability
 
-Future analysis:
+Possible additions:
 
-- SHAP values
-- Misclassification analysis
+* SHAP analysis
+* More detailed error analysis
+* Feature contribution visualisation
+
+## Advanced Validation
+
+Future improvements:
+
+* More robust experiment tracking
+* Hyperparameter optimisation tools
+* Automated model comparison
+
+---
+
+# Final Reflection
+
+This project represents my first step into machine learning and data science.
+
+Through this experiment, I learned:
+
+* How machine learning pipelines are structured
+* How preprocessing affects model performance
+* How feature engineering changes predictions
+* How different algorithms behave
+* How to evaluate and compare models
+
+Although AI tools were heavily used throughout development, the purpose was to use them as a learning assistant while building my understanding of machine learning concepts. This is my first real repository and first real learning experience. Thank you for reading.
