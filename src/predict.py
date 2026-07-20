@@ -1,5 +1,4 @@
 import pandas as pd
-import numpy as np
 import joblib
 
 from preprocess import preprocess_data
@@ -24,6 +23,7 @@ train, test = preprocess_data(
 )
 
 
+
 # ==========================
 # Save Passenger IDs
 # ==========================
@@ -33,7 +33,7 @@ test_ids = test["PassengerId"]
 
 
 # ==========================
-# Prepare Features
+# Features
 # ==========================
 
 features = [
@@ -59,13 +59,19 @@ features = [
     "WomanChild"
 
 ]
+
+
 X_test = test[features]
 
 
-# Encode categorical variables
+
+# ==========================
+# Encoding
+# ==========================
 
 X_test = pd.get_dummies(
-    X_test
+    X_test,
+    drop_first=True
 )
 
 
@@ -91,28 +97,45 @@ model_columns = joblib.load(
 )
 
 
+threshold = joblib.load(
+    "outputs/threshold.pkl"
+)
 
-# Match training columns
+
+
+# ==========================
+# Match Training Columns
+# ==========================
 
 X_test = X_test.reindex(
+
     columns=model_columns,
+
     fill_value=0
+
 )
 
 
 
 # ==========================
-# Predict
+# Prediction
 # ==========================
 
-predictions = model.predict(
+probabilities = model.predict_proba(
     X_test
-)
+)[:,1]
+
+
+predictions = (
+
+    probabilities > threshold
+
+).astype(int)
 
 
 
 # ==========================
-# Submission
+# Create Submission
 # ==========================
 
 submission = pd.DataFrame({
@@ -125,24 +148,35 @@ submission = pd.DataFrame({
 
 
 
+# ==========================
 # Debug
-
-print(X_test.head())
+# ==========================
 
 print(
+    X_test.head()
+)
+
+print(
+    "Shape:",
     X_test.shape
 )
 
 print(
-    model.feature_names_
+    "Model:",
+    type(model)
+)
+
+print(
+    "Threshold:",
+    threshold
+)
+
+print(
+    "Prediction Distribution:"
 )
 
 print(
     submission["Survived"].value_counts()
-)
-
-print(
-    type(model)
 )
 
 
@@ -152,11 +186,14 @@ print(
 # ==========================
 
 submission.to_csv(
+
     "outputs/submission.csv",
+
     index=False
+
 )
 
 
 print(
-    "Submission created!"
+    "\nSubmission created!"
 )
