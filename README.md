@@ -21,19 +21,12 @@ The objective is to predict whether a passenger survived the Titanic disaster us
 
 
 - Raw Titanic Dataset
-v
 - Data Validation
-v
 - Feature Engineering
-v
 - Preprocessing
-v
 - Model Training
-v
 - Cross Validation
-v
 - Final Model
-v
 - Kaggle Submission
 
 ## Environment
