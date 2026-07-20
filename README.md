@@ -20,28 +20,21 @@ The objective is to predict whether a passenger survived the Titanic disaster us
 ## ML Pipeline
 
 
-Raw Titanic Dataset
-|
+- Raw Titanic Dataset
 v
-Data Validation
-|
+- Data Validation
 v
-Feature Engineering
-|
+- Feature Engineering
 v
-Preprocessing
-|
+- Preprocessing
 v
-Model Training
-|
+- Model Training
 v
-Cross Validation
-|
+- Cross Validation
 v
-Final Model
-|
+- Final Model
 v
-Kaggle Prediction
+- Kaggle Submission
 
 ## Environment
 
