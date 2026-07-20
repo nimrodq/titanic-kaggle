@@ -5,7 +5,6 @@ import joblib
 from preprocess import preprocess_data
 
 
-
 # ==========================
 # Load Data
 # ==========================
@@ -21,89 +20,44 @@ test = pd.read_csv(
 
 
 
-train, test = preprocess_data(
-    train,
-    test
-)
+train, test = preprocess_data(train, test)
 
+features = [
+    "Pclass",
+    "Sex",
+    "Age",
+    "Fare",
+    "Embarked",
+    "Title",
+    "FamilySize",
+    "IsAlone",
+    "FamilyGroup",
+    "FarePerPerson",
+    "TicketPrefix"
+]
 
+X_test = test[features]
 
-# ==========================
-# Prepare Test
-# ==========================
-
-test_ids = test["PassengerId"]
-
-
-
-X_test = test.drop(
-    columns=[
-        "PassengerId",
-        "Name",
-        "Ticket",
-        "Cabin"
-    ]
-)
-
-
-
-# ==========================
-# Load Encoders
-# ==========================
-
-encoders = joblib.load(
-    "encoders.pkl"
-)
-
-
-
-for col, encoder in encoders.items():
-
-    X_test[col] = encoder.transform(
-        X_test[col].astype(str)
-    )
-
-
-
-# ==========================
-# Clean Data
-# ==========================
-
-X_test = X_test.replace(
-    [np.inf, -np.inf],
-    np.nan
-)
-
+X_test = pd.get_dummies(X_test)
 
 X_test = X_test.fillna(
-    0
+    X_test.median(numeric_only=True)
 )
-
-
-
-# ==========================
-# Load Model
-# ==========================
 
 model = joblib.load(
-    "model.pkl"
+    "outputs/titanic_model.pkl"
 )
 
-
-
-# ==========================
-# Predict
-# ==========================
-
-predictions = model.predict(
-    X_test
+model_columns = joblib.load(
+    "outputs/model_columns.pkl"
 )
 
+X_test = X_test.reindex(
+    columns=model_columns,
+    fill_value=0
+)
 
-
-# ==========================
-# Submission
-# ==========================
+predictions = model.predict(X_test)
 
 submission = pd.DataFrame({
 
@@ -124,8 +78,4 @@ submission.to_csv(
     index=False
 )
 
-
-
-print(
-    "submission.csv created!"
-)
+print("Submission created!")

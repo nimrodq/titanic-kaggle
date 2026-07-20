@@ -6,6 +6,10 @@ Machine learning project based on the Kaggle Titanic competition.
 
 Predict whether a passenger survived the Titanic disaster using machine learning.
 
+## Current Score
+
+78% (0.77990)
+
 ## Tools Used
 
 - Python

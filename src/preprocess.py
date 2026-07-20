@@ -1,68 +1,80 @@
 import pandas as pd
 
 
+def extract_title(name):
+    title = name.split(",")[1].split(".")[0].strip()
+
+    title_map = {
+        "Mlle": "Miss",
+        "Ms": "Miss",
+        "Mme": "Mrs",
+        "Lady": "Royalty",
+        "Countess": "Royalty",
+        "Sir": "Royalty",
+        "Don": "Royalty",
+        "Dona": "Royalty",
+        "Jonkheer": "Royalty",
+        "Capt": "Officer",
+        "Col": "Officer",
+        "Major": "Officer",
+        "Dr": "Professional",
+        "Rev": "Professional"
+    }
+
+    return title_map.get(title, title)
+
+
+def family_group(size):
+    if size == 1:
+        return "Solo"
+    elif size <= 3:
+        return "Small"
+    elif size <= 5:
+        return "Medium"
+    return "Large"
+
+
+def fill_age(df):
+    age_lookup = (
+        df.groupby(["Sex", "Pclass", "Title"])["Age"]
+        .median()
+    )
+
+    overall_median = df["Age"].median()
+
+    def impute(row):
+        if pd.isna(row["Age"]):
+            key = (row["Sex"], row["Pclass"], row["Title"])
+            if key in age_lookup.index:
+                return age_lookup.loc[key]
+            return overall_median
+        return row["Age"]
+
+    df["Age"] = df.apply(impute, axis=1)
+    return df
+
+
 def preprocess_data(train, test):
+    """
+    Clean Titanic data and create features.
+    """
 
     train = train.copy()
     test = test.copy()
 
-
-    # ==========================
-    # Basic Feature Engineering
-    # ==========================
-    # Ticket Group Size
-    ticket_counts = train["Ticket"].value_counts()
-
+    # Create FamilySize
     for df in [train, test]:
+        df["FamilySize"] = df["SibSp"] + df["Parch"] + 1
 
-        # Surname
-        df["Surname"] = (
-            df["Name"]
-            .str.split(",")
-            .str[0]
-        )
+    # Create IsAlone
+    for df in [train, test]:
+        df["IsAlone"] = 0
+        df.loc[df["FamilySize"] == 1, "IsAlone"] = 1
 
-
-        # Family Size
-        df["FamilySize"] = (
-            df["SibSp"] +
-            df["Parch"] +
-            1
-        )
-
-
-        # Family Size Group
-        df["FamilySizeGroup"] = pd.cut(
-            df["FamilySize"],
-            bins=[
-                0,
-                1,
-                4,
-                7,
-                20
-            ],
-            labels=False,
-            include_lowest=True
-        )
-
-
-        # Alone
-        df["IsAlone"] = (
-            df["FamilySize"] == 1
-        ).astype(int)
-
-
-        df["TicketGroupSize"] = (
-            df["Ticket"]
-            .map(ticket_counts)
-            .fillna(1)
-        )
-
-
-
-        # Title
+    # Extract title from name
+    for df in [train, test]:
         df["Title"] = df["Name"].str.extract(
-            " ([A-Za-z]+)\\.",
+            " ([A-Za-z]+)\.",
             expand=False
         )
 
@@ -325,18 +337,10 @@ def preprocess_data(train, test):
 
     return train, test
 
-
-
 if __name__ == "__main__":
 
-    train = pd.read_csv(
-        "data/train.csv"
-    )
-
-    test = pd.read_csv(
-        "data/test.csv"
-    )
-
+    train = pd.read_csv("data/train.csv")
+    test = pd.read_csv("data/test.csv")
 
     train, test = preprocess_data(
         train,
