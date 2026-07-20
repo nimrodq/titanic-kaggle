@@ -1,4 +1,4 @@
-# Titanic Survival Prediction - Machine Learning Learning Project
+# (KAGGLE) Titanic Survival Prediction - ML Learning Project
 
 ![Python](https://img.shields.io/badge/Python-3.x-blue)
 ![Machine Learning](https://img.shields.io/badge/Machine%20Learning-Scikit--Learn-orange)
