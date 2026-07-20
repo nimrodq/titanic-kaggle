@@ -37,25 +37,28 @@ test_ids = test["PassengerId"]
 # ==========================
 
 features = [
+
     "Pclass",
+
     "Sex",
+
     "Age",
+
     "Fare",
+
     "Embarked",
+
     "Title",
-    "FamilySize",
-    "IsAlone",
+
     "FamilySizeGroup",
+
     "TicketGroupSize",
-    "Deck",
+
     "CabinKnown",
-    "WomanChild",
-    "FarePerPerson",
-    "AgeBand",
-    "FareBand"
+
+    "WomanChild"
+
 ]
-
-
 X_test = test[features]
 
 

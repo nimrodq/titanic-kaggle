@@ -7,28 +7,18 @@ def preprocess_data(train, test):
     test = test.copy()
 
 
-    # ==========================
+    # =====================================================
     # Basic Feature Engineering
-    # ==========================
+    # =====================================================
 
     for df in [train, test]:
 
-        # --------------------------
-        # Surname
-        # --------------------------
 
-        df["Surname"] = (
-            df["Name"]
-            .str.split(",")
-            .str[0]
-        )
+        # -----------------------------
+        # Family Size Group
+        # -----------------------------
 
-
-        # --------------------------
-        # Family Size
-        # --------------------------
-
-        df["FamilySize"] = (
+        family_size = (
             df["SibSp"] +
             df["Parch"] +
             1
@@ -36,7 +26,9 @@ def preprocess_data(train, test):
 
 
         df["FamilySizeGroup"] = pd.cut(
-            df["FamilySize"],
+
+            family_size,
+
             bins=[
                 0,
                 1,
@@ -44,28 +36,25 @@ def preprocess_data(train, test):
                 7,
                 20
             ],
+
             labels=False,
+
             include_lowest=True
+
         )
 
 
-        # --------------------------
-        # Alone
-        # --------------------------
 
-        df["IsAlone"] = (
-            df["FamilySize"] == 1
-        ).astype(int)
-
-
-
-        # --------------------------
-        # Title
-        # --------------------------
+        # -----------------------------
+        # Title Extraction
+        # -----------------------------
 
         df["Title"] = df["Name"].str.extract(
+
             " ([A-Za-z]+)\\.",
+
             expand=False
+
         )
 
 
@@ -92,246 +81,180 @@ def preprocess_data(train, test):
         })
 
 
-        # --------------------------
-        # Cabin Features
-        # --------------------------
 
-        df["Deck"] = (
-            df["Cabin"]
-            .str[0]
-            .fillna("U")
-        )
-
+        # -----------------------------
+        # Cabin Known
+        # -----------------------------
 
         df["CabinKnown"] = (
+
             df["Cabin"]
             .notna()
             .astype(int)
+
         )
 
 
-    # ==========================
-    # Surname Count
-    # ==========================
 
-    surname_counts = (
-        train["Surname"]
-        .value_counts()
-    )
-
-
-    train["SurnameCount"] = (
-        train["Surname"]
-        .map(surname_counts)
-        .fillna(1)
-    )
-
-
-    test["SurnameCount"] = (
-        test["Surname"]
-        .map(surname_counts)
-        .fillna(1)
-    )
-
-
-    # Remove raw surname
-
-    train.drop(
-        columns=["Surname"],
-        inplace=True
-    )
-
-    test.drop(
-        columns=["Surname"],
-        inplace=True
-    )
-
-
-    # ==========================
-    # Ticket Group Size
-    # ==========================
-
-    ticket_counts = (
-        train["Ticket"]
-        .value_counts()
-    )
-
-
-    train["TicketGroupSize"] = (
-        train["Ticket"]
-        .map(ticket_counts)
-        .fillna(1)
-    )
-
-
-    test["TicketGroupSize"] = (
-        test["Ticket"]
-        .map(ticket_counts)
-        .fillna(1)
-    )
-
-
-
-    # ==========================
-    # Age Imputation
-    # ==========================
-
-    train["Age"] = train.groupby(
-        "Title"
-    )["Age"].transform(
-        lambda x: x.fillna(
-            x.median()
-        )
-    )
-
-
-    title_age = (
-        train.groupby("Title")["Age"]
-        .median()
-    )
-
-
-    def fill_test_age(row):
-
-        if pd.isna(row["Age"]):
-
-            if row["Title"] in title_age.index:
-                return title_age[row["Title"]]
-
-            return train["Age"].median()
-
-        return row["Age"]
-
-
-    test["Age"] = test.apply(
-        fill_test_age,
-        axis=1
-    )
-
-
-    overall_age = train["Age"].median()
-
-
-    train["Age"] = train["Age"].fillna(
-        overall_age
-    )
-
-
-    test["Age"] = test["Age"].fillna(
-        overall_age
-    )
-
-
-
-    # ==========================
-    # Woman Child Feature
-    # ==========================
-
-    for df in [train, test]:
+        # -----------------------------
+        # Woman Child
+        # -----------------------------
 
         df["WomanChild"] = (
+
             (df["Sex"] == "female")
+
             |
+
             (df["Age"] < 16)
+
         ).astype(int)
 
 
 
-    # ==========================
+    # =====================================================
+    # Ticket Group Size
+    # =====================================================
+
+    ticket_counts = (
+
+        train["Ticket"]
+        .value_counts()
+
+    )
+
+
+    train["TicketGroupSize"] = (
+
+        train["Ticket"]
+        .map(ticket_counts)
+        .fillna(1)
+
+    )
+
+
+    test["TicketGroupSize"] = (
+
+        test["Ticket"]
+        .map(ticket_counts)
+        .fillna(1)
+
+    )
+
+
+
+    # =====================================================
+    # Age Imputation
+    # =====================================================
+
+    train["Age"] = train.groupby(
+
+        ["Title", "Pclass"]
+
+    )["Age"].transform(
+
+        lambda x:
+        x.fillna(x.median())
+
+    )
+
+
+    age_lookup = (
+
+        train.groupby(
+            ["Title", "Pclass"]
+        )["Age"]
+        .median()
+
+    )
+
+
+    def fill_age(row):
+
+        if pd.isna(row["Age"]):
+
+            key = (
+
+                row["Title"],
+
+                row["Pclass"]
+
+            )
+
+
+            if key in age_lookup.index:
+
+                return age_lookup[key]
+
+
+            return train["Age"].median()
+
+
+        return row["Age"]
+
+
+
+    test["Age"] = test.apply(
+
+        fill_age,
+
+        axis=1
+
+    )
+
+
+
+    train["Age"] = train["Age"].fillna(
+
+        train["Age"].median()
+
+    )
+
+
+    test["Age"] = test["Age"].fillna(
+
+        train["Age"].median()
+
+    )
+
+
+
+    # =====================================================
     # Fare Processing
-    # ==========================
+    # =====================================================
 
     train["Fare"] = train["Fare"].fillna(
+
         train["Fare"].median()
+
     )
 
 
     test["Fare"] = test["Fare"].fillna(
+
         train["Fare"].median()
+
     )
 
 
-    for df in [train, test]:
 
-        df["FarePerPerson"] = (
-            df["Fare"] /
-            df["FamilySize"].clip(lower=1)
-        )
-
-
-
-    # ==========================
-    # Embarked
-    # ==========================
+    # =====================================================
+    # Embarked Processing
+    # =====================================================
 
     train["Embarked"] = train["Embarked"].fillna(
+
         train["Embarked"].mode()[0]
+
     )
 
 
     test["Embarked"] = test["Embarked"].fillna(
+
         train["Embarked"].mode()[0]
+
     )
 
-
-
-    # ==========================
-    # Age Band
-    # ==========================
-
-    for df in [train, test]:
-
-        df["AgeBand"] = pd.cut(
-            df["Age"],
-            bins=[
-                0,
-                16,
-                32,
-                48,
-                64,
-                100
-            ],
-            labels=False,
-            include_lowest=True
-        )
-
-
-
-    # ==========================
-    # Fare Band
-    # ==========================
-
-    train["FareBand"] = pd.qcut(
-        train["Fare"],
-        4,
-        labels=False,
-        duplicates="drop"
-    )
-
-
-    fare_bins = train["Fare"].quantile(
-        [
-            0,
-            0.25,
-            0.5,
-            0.75,
-            1
-        ]
-    ).values
-
-
-    test["FareBand"] = pd.cut(
-        test["Fare"],
-        bins=fare_bins,
-        labels=False,
-        include_lowest=True,
-        duplicates="drop"
-    )
-
-
-    test["FareBand"] = test["FareBand"].fillna(
-        train["FareBand"].median()
-    )
 
 
     return train, test
@@ -340,20 +263,30 @@ def preprocess_data(train, test):
 
 if __name__ == "__main__":
 
+
     train = pd.read_csv(
+
         "data/train.csv"
+
     )
 
+
     test = pd.read_csv(
+
         "data/test.csv"
+
     )
 
 
     train, test = preprocess_data(
+
         train,
+
         test
+
     )
 
 
     print(train.head())
+
     print(train.columns)
