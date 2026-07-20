@@ -17,15 +17,39 @@ The objective is to predict whether a passenger survived the Titanic disaster us
 - Cabin information
 - Passenger titles
 
-The project pipeline:
+## ML Pipeline
 
-1. Data preprocessing
-2. Feature engineering
-3. Model training
-4. Model evaluation
-5. Model selection
-6. Kaggle submission generation
 
+Raw Titanic Dataset
+|
+v
+Data Validation
+|
+v
+Feature Engineering
+|
+v
+Preprocessing
+|
+v
+Model Training
+|
+v
+Cross Validation
+|
+v
+Final Model
+|
+v
+Kaggle Prediction
+
+## Environment
+
+Python >= 3.10
+
+Tested on:
+
+Python 3.12
 
 ## Current Performance
 
