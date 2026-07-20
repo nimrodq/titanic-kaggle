@@ -2,6 +2,15 @@
 
 This document records the experiments conducted during development of the Titanic survival prediction model.
 
+## Saved Artifacts
+
+`titanic_model.pkl`
+
+Trained CatBoost model used for inference.
+
+`model_columns.pkl`
+
+Stores feature ordering to ensure prediction consistency.
 
 # Experiment 1 - Baseline Model
 
@@ -321,7 +330,6 @@ training ticket counts only
 
 The model should generalise better to unseen Kaggle test data.
 
-
 ---
 
 # Current Best Model
@@ -332,7 +340,25 @@ The model should generalise better to unseen Kaggle test data.
 | 10-Fold CV Accuracy | 82.6% |
 | Kaggle Public Score | 77.99% |
 
+# Experiment 7 - Error Analysis
 
+## Objective
+
+Understand where the model fails.
+
+## Findings
+
+Most false negatives:
+
+- Male passengers
+- Third class passengers
+- Low fare passengers
+
+Most false positives:
+
+- Female passengers travelling alone
+- Young passengers without family information
+- 
 # Future Experiments
 
 ## Family Survival Features
