@@ -8,6 +8,7 @@ from sklearn.metrics import accuracy_score
 
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier, ExtraTreesClassifier
+from sklearn.inspection import permutation_importance
 
 from xgboost import XGBClassifier
 from catboost import CatBoostClassifier
@@ -54,6 +55,7 @@ features = [
     "IsAlone",
 
     "TicketGroupSize",
+    "SurnameCount",
 
     "Deck",
     "CabinKnown",
@@ -272,8 +274,6 @@ print(
 
 )
 
-
-
 # ==========================
 # Retrain Full Dataset
 # ==========================
@@ -287,11 +287,73 @@ best_model.fit(
 
 )
 
+if isinstance(best_model, CatBoostClassifier):
+
+    importance = best_model.get_feature_importance()
+
+    feature_importance = pd.DataFrame({
+        "Feature": X.columns,
+        "Importance": importance
+    })
+
+
+elif hasattr(best_model, "feature_importances_"):
+
+    importance = best_model.feature_importances_
+
+    feature_importance = pd.DataFrame({
+        "Feature": X.columns,
+        "Importance": importance
+    })
+
+
+else:
+
+    result = permutation_importance(
+        best_model,
+        X_valid,
+        y_valid,
+        n_repeats=10,
+        random_state=42
+    )
+
+    feature_importance = pd.DataFrame({
+        "Feature": X.columns,
+        "Importance": result.importances_mean
+    })
+
+
+feature_importance = feature_importance.sort_values(
+    "Importance",
+    ascending=False
+)
+
+
+print(feature_importance)
+
+
+feature_importance.to_csv(
+    "outputs/feature_importance.csv",
+    index=False
+)
 
 
 # ==========================
 # Save
 # ==========================
+
+joblib.dump(
+
+    best_model,
+
+    "outputs/titanic_model.pkl"
+
+)
+
+joblib.dump(
+    best_name,
+    "outputs/best_model_name.pkl"
+)
 
 
 os.makedirs(
@@ -302,15 +364,6 @@ os.makedirs(
 
 )
 
-
-
-joblib.dump(
-
-    best_model,
-
-    "outputs/titanic_model.pkl"
-
-)
 
 
 print(

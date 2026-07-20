@@ -1,80 +1,70 @@
 import pandas as pd
 
 
-def extract_title(name):
-    title = name.split(",")[1].split(".")[0].strip()
-
-    title_map = {
-        "Mlle": "Miss",
-        "Ms": "Miss",
-        "Mme": "Mrs",
-        "Lady": "Royalty",
-        "Countess": "Royalty",
-        "Sir": "Royalty",
-        "Don": "Royalty",
-        "Dona": "Royalty",
-        "Jonkheer": "Royalty",
-        "Capt": "Officer",
-        "Col": "Officer",
-        "Major": "Officer",
-        "Dr": "Professional",
-        "Rev": "Professional"
-    }
-
-    return title_map.get(title, title)
-
-
-def family_group(size):
-    if size == 1:
-        return "Solo"
-    elif size <= 3:
-        return "Small"
-    elif size <= 5:
-        return "Medium"
-    return "Large"
-
-
-def fill_age(df):
-    age_lookup = (
-        df.groupby(["Sex", "Pclass", "Title"])["Age"]
-        .median()
-    )
-
-    overall_median = df["Age"].median()
-
-    def impute(row):
-        if pd.isna(row["Age"]):
-            key = (row["Sex"], row["Pclass"], row["Title"])
-            if key in age_lookup.index:
-                return age_lookup.loc[key]
-            return overall_median
-        return row["Age"]
-
-    df["Age"] = df.apply(impute, axis=1)
-    return df
-
-
 def preprocess_data(train, test):
-    """
-    Clean Titanic data and create features.
-    """
 
     train = train.copy()
     test = test.copy()
 
-    # Create FamilySize
-    for df in [train, test]:
-        df["FamilySize"] = df["SibSp"] + df["Parch"] + 1
 
-    # Create IsAlone
-    for df in [train, test]:
-        df["IsAlone"] = 0
-        df.loc[df["FamilySize"] == 1, "IsAlone"] = 1
+    # ==========================
+    # Basic Feature Engineering
+    # ==========================
 
-    # Extract title from name
     for df in [train, test]:
+
+        # --------------------------
+        # Surname
+        # --------------------------
+
+        df["Surname"] = (
+            df["Name"]
+            .str.split(",")
+            .str[0]
+        )
+
+
+        # --------------------------
+        # Family Size
+        # --------------------------
+
+        df["FamilySize"] = (
+            df["SibSp"] +
+            df["Parch"] +
+            1
+        )
+
+
+        df["FamilySizeGroup"] = pd.cut(
+            df["FamilySize"],
+            bins=[
+                0,
+                1,
+                4,
+                7,
+                20
+            ],
+            labels=False,
+            include_lowest=True
+        )
+
+
+        # --------------------------
+        # Alone
+        # --------------------------
+
+        df["IsAlone"] = (
+            df["FamilySize"] == 1
+        ).astype(int)
+
+
+
+        # --------------------------
+        # Title
+        # --------------------------
+
         df["Title"] = df["Name"].str.extract(
-            " ([A-Za-z]+)\.",
+            " ([A-Za-z]+)\\.",
             expand=False
         )
 
@@ -95,13 +85,17 @@ def preprocess_data(train, test):
             "Capt": "Officer",
             "Col": "Officer",
             "Major": "Officer",
-            "Dr": "Officer",
-            "Rev": "Officer"
+
+            "Dr": "Professional",
+            "Rev": "Professional"
 
         })
 
 
-        # Cabin information
+        # --------------------------
+        # Cabin Features
+        # --------------------------
+
         df["Deck"] = (
             df["Cabin"]
             .str[0]
@@ -116,35 +110,32 @@ def preprocess_data(train, test):
         )
 
 
-
     # ==========================
-    # Surname Feature
+    # Surname Count
     # ==========================
 
-    """ surname_counts = pd.concat(
-        [
-            train["Surname"],
-            test["Surname"]
-        ]
-    ).value_counts() """
+    surname_counts = (
+        train["Surname"]
+        .value_counts()
+    )
 
 
-    """ train["SurnameCount"] = (
+    train["SurnameCount"] = (
         train["Surname"]
         .map(surname_counts)
         .fillna(1)
-    ) """
+    )
 
 
-    """ test["SurnameCount"] = (
+    test["SurnameCount"] = (
         test["Surname"]
         .map(surname_counts)
         .fillna(1)
-    ) """
-
+    )
 
 
     # Remove raw surname
+
     train.drop(
         columns=["Surname"],
         inplace=True
@@ -153,6 +144,30 @@ def preprocess_data(train, test):
     test.drop(
         columns=["Surname"],
         inplace=True
+    )
+
+
+    # ==========================
+    # Ticket Group Size
+    # ==========================
+
+    ticket_counts = (
+        train["Ticket"]
+        .value_counts()
+    )
+
+
+    train["TicketGroupSize"] = (
+        train["Ticket"]
+        .map(ticket_counts)
+        .fillna(1)
+    )
+
+
+    test["TicketGroupSize"] = (
+        test["Ticket"]
+        .map(ticket_counts)
+        .fillna(1)
     )
 
 
@@ -176,18 +191,21 @@ def preprocess_data(train, test):
     )
 
 
+    def fill_test_age(row):
+
+        if pd.isna(row["Age"]):
+
+            if row["Title"] in title_age.index:
+                return title_age[row["Title"]]
+
+            return train["Age"].median()
+
+        return row["Age"]
+
+
     test["Age"] = test.apply(
-
-        lambda row:
-
-            title_age[row["Title"]]
-            if pd.isna(row["Age"])
-            and row["Title"] in title_age.index
-
-            else row["Age"],
-
+        fill_test_age,
         axis=1
-
     )
 
 
@@ -206,17 +224,18 @@ def preprocess_data(train, test):
 
 
     # ==========================
-    # Woman Child
+    # Woman Child Feature
     # ==========================
 
     for df in [train, test]:
 
-        # Female or child passengers
         df["WomanChild"] = (
             (df["Sex"] == "female")
             |
             (df["Age"] < 16)
         ).astype(int)
+
+
 
     # ==========================
     # Fare Processing
@@ -235,10 +254,8 @@ def preprocess_data(train, test):
     for df in [train, test]:
 
         df["FarePerPerson"] = (
-
             df["Fare"] /
             df["FamilySize"].clip(lower=1)
-
         )
 
 
@@ -265,9 +282,7 @@ def preprocess_data(train, test):
     for df in [train, test]:
 
         df["AgeBand"] = pd.cut(
-
             df["Age"],
-
             bins=[
                 0,
                 16,
@@ -276,11 +291,8 @@ def preprocess_data(train, test):
                 64,
                 100
             ],
-
             labels=False,
-
             include_lowest=True
-
         )
 
 
@@ -290,15 +302,10 @@ def preprocess_data(train, test):
     # ==========================
 
     train["FareBand"] = pd.qcut(
-
         train["Fare"],
-
         4,
-
         labels=False,
-
         duplicates="drop"
-
     )
 
 
@@ -313,19 +320,12 @@ def preprocess_data(train, test):
     ).values
 
 
-
     test["FareBand"] = pd.cut(
-
         test["Fare"],
-
         bins=fare_bins,
-
         labels=False,
-
         include_lowest=True,
-
         duplicates="drop"
-
     )
 
 
@@ -334,13 +334,20 @@ def preprocess_data(train, test):
     )
 
 
-
     return train, test
+
+
 
 if __name__ == "__main__":
 
-    train = pd.read_csv("data/train.csv")
-    test = pd.read_csv("data/test.csv")
+    train = pd.read_csv(
+        "data/train.csv"
+    )
+
+    test = pd.read_csv(
+        "data/test.csv"
+    )
+
 
     train, test = preprocess_data(
         train,

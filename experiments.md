@@ -1,270 +1,376 @@
-# Titanic Kaggle Experiments
+# Titanic Model Experiments
 
-## Project Overview
+This document records the experiments conducted during development of the Titanic survival prediction model.
 
-This project builds a complete machine learning pipeline for the Kaggle Titanic competition.
 
-The workflow includes:
+# Experiment 1 - Baseline Model
 
-- Data preprocessing
-- Feature engineering
-- Model training
-- Hyperparameter tuning
-- Cross-validation
-- Kaggle submission generation
-- Experiment tracking using Git
+## Objective
 
----
+Create a simple baseline model using basic passenger information.
 
-# Experiment Results
+## Model
 
-| Experiment | Model | Changes | Public Kaggle Score |
-|------------|-------|---------|--------------------:|
-| Baseline | Logistic Regression | Pclass, Sex, Age, Fare, FamilySize, IsAlone, Embarked, Title | **0.77751** |
-| Feature Engineering | Logistic Regression | Added Rare Title handling + FarePerPerson | 0.77511 |
-| Model Comparison | Random Forest | Same baseline features | 0.77751 |
-| Feature Engineering | Logistic Regression | Improved Age imputation | 0.77511 |
-| Feature Engineering | Logistic Regression | Added Cabin Deck feature | 0.76794 |
-| Model Comparison | Gradient Boosting | Age bands, Fare bands, TicketGroup, Deck and additional engineered features | 0.76555 |
-| Hyperparameter Tuning | Logistic Regression | C=0.5, solver=liblinear | **0.77990** ✅ |
-| Feature Engineering | Logistic Regression | Added TicketGroup + HasCabin | 0.77751 |
-| Ensemble Learning | Soft Voting Classifier | Logistic Regression + Random Forest + Gradient Boosting with 5-Fold Stratified Cross-Validation | 0.77751 |
+Logistic Regression
 
----
+## Features
 
-# Best Model
-
-## Logistic Regression
-
-### Parameters
-
-```
-C = 0.5
-solver = liblinear
-max_iter = 1000
-```
-
-### Features
+Initial features:
 
 - Pclass
 - Sex
 - Age
 - Fare
-- FamilySize
-- IsAlone
 - Embarked
-- Title
 
-### Best Public Kaggle Score
 
-**0.77990**
+## Result
+
+Validation accuracy was approximately:
+
+```text
+78%
+```
+
+The baseline model performed reasonably but struggled to capture nonlinear passenger relationships.
+
 
 ---
 
-# Cross-Validation Experiment
+# Experiment 2 - Feature Engineering
 
-To evaluate a more robust machine learning workflow, a Soft Voting Ensemble was tested.
+## Objective
 
-## Models
+Improve model performance by creating additional passenger-based features.
 
-- Logistic Regression
-- Random Forest
-- Gradient Boosting
 
-## Validation Method
+## Added Features
 
-- Stratified 5-Fold Cross-Validation
+### Family Features
 
-## Cross-Validation Scores
+Added:
 
-```
-Fold 1 : 0.83799
-Fold 2 : 0.81461
-Fold 3 : 0.83146
-Fold 4 : 0.83146
-Fold 5 : 0.84831
-```
+- FamilySize
+- FamilySizeGroup
+- IsAlone
 
-**Mean Cross-Validation Accuracy: 0.8328**
 
-Although the ensemble achieved a higher cross-validation accuracy than the Logistic Regression model, its Kaggle public leaderboard score (0.77751) was lower than the tuned Logistic Regression model (0.77990). This demonstrates that better validation performance does not always translate into better generalization on unseen test data.
+### Passenger Features
 
----
+Added:
 
-# Feature Engineering Tested
+- Title extraction
+- Age imputation by title
 
-## Title Extraction
 
-Extracted passenger titles from names.
+### Cabin Features
 
-Grouped uncommon titles into a single **Rare** category.
-
-Examples:
-
-- Mr
-- Mrs
-- Miss
-- Master
-- Rare
-
-Rare titles included:
-
-- Dr
-- Rev
-- Lady
-- Major
-- Sir
-- Countess
-- Capt
-- Col
-- Don
-- Jonkheer
-
----
-
-## Family Size
-
-Created:
-
-```
-FamilySize = SibSp + Parch + 1
-```
-
-This captures the total travelling group size.
-
----
-
-## IsAlone
-
-Created:
-
-```
-IsAlone = (FamilySize == 1)
-```
-
-Passengers travelling alone exhibited different survival patterns.
-
----
-
-## Ticket Group
-
-Created:
-
-```
-TicketGroup = Number of passengers sharing the same ticket
-```
-
-Did not improve leaderboard performance.
-
----
-
-## Cabin Features
-
-Tested:
+Added:
 
 - Deck
-- HasCabin
+- CabinKnown
 
-Neither feature improved the final Kaggle score.
+
+### Fare Features
+
+Added:
+
+- FarePerPerson
+- FareBand
+
+
+### Ticket Features
+
+Added:
+
+- TicketGroupSize
+
+
+## Result
+
+Feature engineering improved model performance by providing more meaningful passenger relationships.
+
 
 ---
 
-# Models Evaluated
+# Experiment 3 - Model Comparison
 
-## Logistic Regression
+## Objective
 
-Advantages:
+Compare different machine learning algorithms.
 
-- Strong baseline for small datasets
-- Fast to train
-- Less prone to overfitting
-- Best leaderboard performance
 
-Public Score:
+## Models Tested
 
-**0.77990**
-
----
 
 ## Random Forest
 
 Advantages:
 
-- Captures nonlinear relationships
-- Handles feature interactions
+- Handles nonlinear relationships
+- Robust against noise
 
-Public Score:
+Validation Accuracy:
 
-**0.77751**
+```text
+~79%
+```
 
----
 
-## Gradient Boosting
+## XGBoost
 
 Advantages:
 
-- Powerful nonlinear learner
+- Gradient boosting approach
+- Strong performance on structured datasets
 
-Result:
+Validation Accuracy:
 
-Performed worse than Logistic Regression on the hidden Kaggle test set.
+```text
+~81.5%
+```
 
-Public Score:
 
-**0.76555**
+## LightGBM
+
+Advantages:
+
+- Efficient gradient boosting
+- Fast training
+
+Validation Accuracy:
+
+```text
+~81%
+```
+
+
+## CatBoost
+
+Advantages:
+
+- Strong categorical feature handling
+- Effective on small datasets
+
+Validation Accuracy:
+
+```text
+82.1%
+```
+
+
+CatBoost achieved the best validation performance.
+
 
 ---
 
-## Soft Voting Ensemble
+# Experiment 4 - Hyperparameter Tuning
 
-Components:
+## Objective
 
-- Logistic Regression
-- Random Forest
-- Gradient Boosting
+Improve model performance through parameter optimisation.
+
+
+## Method
+
+RandomizedSearchCV with cross validation.
+
+
+## Tuned Parameters
+
+
+### CatBoost
+
+- iterations
+- depth
+- learning rate
+- L2 regularisation
+
+
+### XGBoost
+
+- number of estimators
+- max depth
+- learning rate
+- subsampling
+
+
+### LightGBM
+
+- number of leaves
+- depth
+- regularisation
+
+
+### Random Forest
+
+- number of estimators
+- maximum depth
+- minimum samples
+
+
+## Result
+
+Best tuned model:
+
+```text
+CatBoostClassifier
+```
+
+Validation accuracy:
+
+```text
+82.1%
+```
+
+
+---
+
+# Experiment 5 - Cross Validation
+
+## Objective
+
+Verify that validation performance was not caused by a lucky train-validation split.
+
+
+## Method
+
+10-Fold Stratified Cross Validation
+
+
+## Result
+
+```text
+Mean Accuracy: 82.6%
+```
+
+
+The result confirmed that the model consistently achieves around 82% accuracy.
+
+
+---
+
+# Experiment 6 - Feature Leakage Investigation
+
+## Problem
+
+Initial experiments showed:
 
 Validation:
 
-- 5-Fold Stratified Cross-Validation
+```text
+82.6%
+```
 
-Mean CV Accuracy:
+Kaggle:
 
-**0.8328**
+```text
+77.5%
+```
 
-Public Kaggle Score:
 
-**0.77751**
+A generalisation issue was suspected.
 
-The ensemble achieved the highest validation accuracy but did not outperform the tuned Logistic Regression model on Kaggle, indicating slight overfitting to the training data.
+
+## Removed Features
+
+
+## SurnameCount
+
+Previous implementation:
+
+```text
+Combined train and test surname counts
+```
+
+This used information from the hidden test distribution.
+
+
+## TicketGroupSize
+
+Previous implementation:
+
+```text
+Combined train and test ticket counts
+```
+
+This also used test distribution information.
+
+
+## Fix
+
+Changed statistical calculations to use training data only.
+
+
+Example:
+
+Before:
+
+```text
+train + test ticket counts
+```
+
+After:
+
+```text
+training ticket counts only
+```
+
+
+## Expected Impact
+
+The model should generalise better to unseen Kaggle test data.
+
 
 ---
 
-# Lessons Learned
+# Current Best Model
 
-This project highlighted several important machine learning principles:
+| Metric | Score |
+|---|---:|
+| Validation Accuracy | 82.1% |
+| 10-Fold CV Accuracy | 82.6% |
+| Kaggle Public Score | 77.99% |
 
-- Simpler models can outperform more complex models on small datasets.
-- Feature engineering should be validated experimentally rather than assumed to improve performance.
-- Hyperparameter tuning provided the largest improvement (+0.00239 leaderboard score).
-- Cross-validation offers a more reliable estimate of model performance, but higher validation accuracy does not always lead to a higher public leaderboard score.
-- Reproducible experiments and version control made it easy to compare different approaches and restore the best-performing model.
 
----
+# Future Experiments
 
-# Final Conclusion
+## Family Survival Features
 
-The final selected model is:
+Planned feature engineering:
 
-**Logistic Regression**
+- Same surname survival
+- Same ticket survival
+- Family member outcomes
 
-```
-C = 0.5
-solver = liblinear
-max_iter = 1000
-```
 
-Final Public Kaggle Score:
+## Ensemble Methods
 
-# **0.77990**
+Potential improvements:
 
-While more sophisticated approaches such as Gradient Boosting and Soft Voting Ensembles were explored, the tuned Logistic Regression model consistently provided the best balance between simplicity, generalization, and leaderboard performance.
+- Voting Classifier
+- Stacking Classifier
+
+## Feature Importance Analysis
+
+Permutation importance was performed on the final Logistic Regression model.
+
+The most influential feature was WomanChild, which combines gender and age information to capture the historical "women and children first" survival pattern.
+
+Other important features included:
+
+- FamilySizeGroup
+- Sex
+- Age
+- Fare
+- Passenger Title
+
+Some engineered features such as SurnameCount, TicketGroupSize and FarePerPerson showed negative importance, suggesting they introduced additional noise rather than improving prediction performance.
+
+
+## Explainability
+
+Future analysis:
+
+- SHAP values
+- Misclassification analysis
