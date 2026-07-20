@@ -2,6 +2,7 @@
 
 ![Python](https://img.shields.io/badge/Python-3.x-blue)
 ![Machine Learning](https://img.shields.io/badge/Machine%20Learning-Scikit--Learn-orange)
+![Kaggle](https://img.shields.io/badge/Kaggle-Titanic-blue)
 ![Status](https://img.shields.io/badge/Project-Learning%20Project-green)
 
 ## About This Project
@@ -162,25 +163,13 @@ Women and children were prioritised during evacuation
 
 The project compares several machine learning algorithms:
 
-## Logistic Regression
-
-Used as a baseline linear classification model.
-
-## Random Forest
-
-An ensemble model using multiple decision trees.
-
-## Extra Trees
-
-A randomized tree-based ensemble algorithm.
-
-## XGBoost
-
-A gradient boosting algorithm commonly used for structured/tabular datasets.
-
-## CatBoost
-
-A gradient boosting model designed to handle categorical data effectively.
+| Model | Description |
+|---|---|
+| Logistic Regression | Used as a baseline linear classification model. |
+| Random Forest | An ensemble model using multiple decision trees. |
+| Extra Trees | A randomized tree-based ensemble algorithm. |
+| XGBoost | A gradient boosting algorithm commonly used for structured/tabular datasets. |
+| CatBoost | A gradient boosting model designed to handle categorical data effectively. |
 
 ---
 
@@ -194,6 +183,87 @@ Models were evaluated using:
 - Recall
 - F1 Score
 - Confusion Matrix
+
+## Why These Metrics Were Used
+
+### Stratified K-Fold Cross Validation
+
+Instead of relying on a single train-validation split, Stratified K-Fold Cross Validation divides the dataset into multiple folds and trains/evaluates the model several times.
+
+Stratification ensures that each fold maintains a similar proportion of survivors and non-survivors.
+
+This was used because the Titanic dataset contains an imbalance between:
+
+- Survivors
+- Non-survivors
+
+Using stratified cross-validation provides a more reliable estimate of how well the model generalises to unseen data.
+
+---
+
+### Accuracy
+
+Accuracy measures the percentage of predictions that the model classified correctly.
+
+It provides an overall measurement of model performance:
+
+```
+Correct Predictions / Total Predictions
+```
+
+Accuracy is useful for comparing different models, but it should not be used alone because a model could achieve high accuracy while performing poorly on the survivor class.
+
+---
+
+### Precision
+
+Precision measures how many passengers predicted as survivors actually survived.
+
+It answers:
+
+> "When the model predicts survival, how often is it correct?"
+
+Precision is useful because it evaluates the number of false positive predictions, where passengers are predicted to survive but actually did not.
+
+---
+
+### Recall
+
+Recall measures how many actual survivors the model successfully identified.
+
+It answers:
+
+> "Out of all passengers who survived, how many did the model correctly identify?"
+
+Recall is important because failing to identify actual survivors results in false negatives.
+
+---
+
+### F1 Score
+
+F1 Score combines precision and recall into a single metric.
+
+It provides a balance between:
+
+- Correctly predicting survivors
+- Finding as many survivors as possible
+
+This is useful because both false positive and false negative predictions are important in a survival prediction problem.
+
+---
+
+### Confusion Matrix
+
+The confusion matrix provides a detailed breakdown of model predictions.
+
+| | Predicted Not Survived | Predicted Survived |
+|---|---|---|
+| Actual Not Survived | True Negative | False Positive |
+| Actual Survived | False Negative | True Positive |
+
+![Confusion Matrix](assets/confusion_matrix.png)
+
+It helps identify the specific types of mistakes made by the model instead of only looking at the overall accuracy.
 
 Latest cross-validation results:
 
@@ -214,6 +284,26 @@ Cross Validation Accuracy:
 83.84%
 ```
 
+# Feature Importance Analysis
+
+Feature importance was generated from the final trained model to understand which features contributed the most to survival predictions.
+
+The analysis shows which passenger characteristics had the strongest influence on the model's decisions.
+
+![Feature Importance](assets/feature_importance.png)
+
+The most influential features included:
+
+- Fare
+- Age
+- Passenger Title (such as Mr, Mrs, Miss)
+- WomanChild
+- Passenger Class
+- Ticket Group Size
+
+These results align with historical patterns from the Titanic disaster, where factors such as social class, gender, age, and available resources affected survival probability.
+
+Feature importance was used as an interpretation tool to better understand the model rather than as a direct indicator of causation.
 ---
 
 # Project Structure
