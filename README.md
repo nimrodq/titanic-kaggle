@@ -1,285 +1,315 @@
-# Titanic - Machine Learning from Disaster
+# Titanic Survival Prediction - Machine Learning Learning Project
 
-A machine learning project that predicts passenger survival on the Titanic dataset from Kaggle.
+![Python](https://img.shields.io/badge/Python-3.x-blue)
+![Machine Learning](https://img.shields.io/badge/Machine%20Learning-Scikit--Learn-orange)
+![Status](https://img.shields.io/badge/Project-Learning%20Project-green)
 
-The project focuses on feature engineering, model comparison, hyperparameter tuning, and improving generalisation performance on a small tabular dataset.
+# ⚠️ Learning Project Disclaimer
 
-## Project Overview
+This repository is a **learning project** created as my first machine learning test project.
+
+I am currently a **beginner/student learning data science and machine learning**, and this project was built to understand the complete machine learning workflow:
+
+* Data preprocessing
+* Feature engineering
+* Model training
+* Model evaluation
+* Hyperparameter tuning
+* Prediction generation
+
+This project is not intended to represent an industry-level machine learning solution. It is mainly a personal learning exercise to explore how machine learning models work.
+
+A significant portion of this project was developed with the assistance of **AI tools**. AI was used heavily for:
+
+* Understanding machine learning concepts
+* Debugging errors
+* Suggesting code improvements
+* Explaining model behaviour
+* Exploring feature engineering approaches
+
+The goal of this project was not only to create a prediction model, but also to learn how machine learning projects are structured and developed.
+
+---
+
+# Titanic: Machine Learning from Disaster
+
+This project is based on the famous Kaggle competition:
+
+**Titanic - Machine Learning from Disaster**
 
 The objective is to predict whether a passenger survived the Titanic disaster using information such as:
 
-- Passenger class
-- Gender
-- Age
-- Fare
-- Family relationships
-- Ticket information
-- Cabin information
-- Passenger titles
+* Passenger class
+* Gender
+* Age
+* Fare
+* Embarkation location
+* Passenger title
+* Family/group information
+* Cabin availability
 
-## ML Pipeline
+The project uses supervised machine learning classification models to predict the `Survived` target variable.
 
+---
 
-- Raw Titanic Dataset
-- Data Validation
-- Feature Engineering
-- Preprocessing
-- Model Training
-- Cross Validation
-- Final Model
-- Kaggle Submission
+# Project Workflow
 
-## Environment
+The project follows a complete machine learning pipeline:
 
-Python >= 3.10
+```
+Raw Dataset
+     |
+     v
+Data Cleaning
+     |
+     v
+Feature Engineering
+     |
+     v
+Feature Encoding
+     |
+     v
+Model Training
+     |
+     v
+Cross Validation
+     |
+     v
+Model Selection
+     |
+     v
+Prediction
+     |
+     v
+Submission File
+```
 
-Tested on:
+---
 
-Python 3.12
+# Features Used
 
-## Current Performance
+The final feature set was selected after testing multiple feature combinations.
 
-### Validation Performance
+Current features:
 
-- Best Model: **CatBoostClassifier**
-- Validation Accuracy: **82.1%**
-- 10-Fold Cross Validation Accuracy: **82.6%**
+| Feature         | Description                                             |
+| --------------- | ------------------------------------------------------- |
+| Pclass          | Passenger ticket class                                  |
+| Sex             | Passenger gender                                        |
+| Age             | Passenger age                                           |
+| Fare            | Ticket fare                                             |
+| Embarked        | Boarding location                                       |
+| Title           | Extracted passenger title (Mr, Mrs, Miss, Master, etc.) |
+| FamilySizeGroup | Categorised family size                                 |
+| TicketGroupSize | Number of passengers sharing the ticket                 |
+| CabinKnown      | Whether cabin information exists                        |
+| WomanChild      | Indicates women and children groups                     |
 
-### Kaggle Performance
-
-- Public Score: **0.77990**
-
-The difference between validation and Kaggle performance is being investigated through further feature engineering and model improvements.
-
+---
 
 # Feature Engineering
 
-The preprocessing pipeline creates additional features to better represent passenger characteristics.
+The preprocessing pipeline includes:
 
+## Missing Value Handling
 
-## Passenger Features
+* Age values are filled using grouped passenger information
+* Missing embarked values are handled
+* Missing cabin values are converted into a binary feature
 
-### Title Extraction
+## Title Extraction
 
-Passenger titles are extracted from names.
+Passenger names are converted into titles:
 
 Examples:
 
-- Mr
-- Mrs
-- Miss
-- Master
-- Officer
-- Royalty
-
-Rare titles are grouped together to reduce noise.
-
-
-### Age Imputation
-
-Missing ages are filled using:
-
-1. Median age grouped by passenger title
-2. Overall median age as fallback
-
-
-### Age Band
-
-Passengers are grouped into age categories to capture nonlinear relationships between age and survival.
-
+```
+Mr
+Mrs
+Miss
+Master
+Officer
+Professional
+Royalty
+```
 
 ## Family Features
 
-### Family Size
+Created features to capture survival patterns:
 
-Calculated using:
+* Family size categories
+* Ticket group size
+* Woman/child indicator
 
-```text
-FamilySize = SibSp + Parch + 1
-```
-
-### Family Size Group
-
-Passengers are categorised into:
-
-- Alone
-- Small Family
-- Medium Family
-- Large Family
-
-
-### Is Alone
-
-Binary feature:
-
-```text
-1 = Passenger travelled alone
-0 = Passenger travelled with family
-```
-
-
-### WomanChild
-
-Captures the historical "women and children first" survival pattern.
-
-```text
-Female OR Age < 16
-```
-
-
-## Ticket Features
-
-### Ticket Group Size
-
-Counts passengers sharing the same ticket.
-
-Only training data is used to prevent test distribution leakage.
-
-
-## Cabin Features
-
-### Deck
-
-Extracts the cabin deck letter.
-
-Missing cabin values are grouped as:
-
-```text
-U = Unknown
-```
-
-
-### CabinKnown
-
-Indicates whether cabin information was available.
-
-```text
-1 = Cabin available
-0 = Cabin missing
-```
-
-
-## Fare Features
-
-### Fare Per Person
-
-Calculated as:
-
-```text
-Fare / FamilySize
-```
-
-
-### Fare Band
-
-Passengers are grouped into fare categories.
-
+---
 
 # Models Tested
 
-The following machine learning models were evaluated:
+The project compares multiple classification algorithms:
 
-| Model | Purpose |
-|---|---|
-| Logistic Regression | Baseline linear model |
-| Random Forest | Tree ensemble model |
-| Extra Trees | Randomised tree ensemble |
-| XGBoost | Gradient boosting model |
-| LightGBM | Gradient boosting model |
-| CatBoost | Categorical boosting model |
+## Logistic Regression
 
+A baseline linear classification model.
 
-# Final Model
+## Random Forest
 
-The current best-performing model is:
+An ensemble tree model that combines multiple decision trees.
 
-```text
+## Extra Trees
+
+A randomized tree ensemble model.
+
+## XGBoost
+
+A gradient boosting algorithm designed for high-performance tabular data.
+
+## CatBoost
+
+A gradient boosting algorithm that performs well with categorical features.
+
+---
+
+# Model Evaluation
+
+Models are evaluated using:
+
+* Stratified K-Fold Cross Validation
+* Accuracy Score
+* Precision
+* Recall
+* F1 Score
+* Confusion Matrix
+
+Latest cross-validation results:
+
+```
+LogisticRegression : 0.8193
+RandomForest       : 0.8339
+ExtraTrees         : 0.8316
+XGBoost            : 0.8294
+CatBoost            : 0.8384
+```
+
+Best performing model:
+
+```
 CatBoostClassifier
 ```
 
-CatBoost was selected because:
-
-- It performs well on small tabular datasets
-- It handles categorical features effectively
-- It achieved the highest validation consistency
-
-
-The final model is retrained using the complete training dataset before generating Kaggle predictions.
-
+---
 
 # Project Structure
 
 ```
 titanic-kaggle/
 
+│
 ├── data/
 │   ├── train.csv
 │   └── test.csv
-│
-├── outputs/
-│   ├── titanic_model.pkl
-│   ├── model_columns.pkl
-│   └── submission.csv
 │
 ├── src/
 │   ├── preprocess.py
 │   ├── train.py
 │   └── predict.py
 │
-├── README.md
-└── experiments.md
+├── outputs/
+│   ├── titanic_model.pkl
+│   ├── model_columns.pkl
+│   ├── threshold.pkl
+│   └── submission.csv
+│
+├── assets/
+│   ├── confusion_matrix.png
+│   └── feature_importance.png
+│
+└── README.md
 ```
 
+---
 
-# Running the Project
+# How To Run
 
-## Install Dependencies
+## Install dependencies
 
 ```bash
-pip install -r requirements.txt
+pip install pandas numpy scikit-learn xgboost catboost matplotlib seaborn joblib
 ```
 
-
-## Train Model
+## Train the models
 
 ```bash
 python src/train.py
 ```
 
+This will:
 
-## Generate Submission
+* Preprocess the dataset
+* Train multiple models
+* Perform cross-validation
+* Select the best model
+* Save the trained model
+
+---
+
+## Generate Predictions
 
 ```bash
 python src/predict.py
 ```
 
+This creates:
 
-The generated submission file will be:
-
-```text
+```
 outputs/submission.csv
 ```
 
+which can be submitted to Kaggle.
 
-# Future Improvements
-
-Potential improvements:
-
-- Family survival features
-- Better ensemble methods
-- Stacking classifiers
-- SHAP feature importance analysis
-- More extensive hyperparameter optimisation
-- Error analysis on misclassified passengers
-
+---
 
 # Technologies Used
 
-- Python
-- Pandas
-- NumPy
-- Scikit-learn
-- CatBoost
-- XGBoost
-- LightGBM
-- Kaggle Titanic Dataset
+* Python
+* Pandas
+* NumPy
+* Scikit-learn
+* XGBoost
+* CatBoost
+* Matplotlib
+* Seaborn
+* Joblib
+
+---
+
+# What I Learned
+
+Through this project, I learned:
+
+* How machine learning pipelines are structured
+* The importance of preprocessing
+* How feature engineering affects model performance
+* Differences between machine learning algorithms
+* How to evaluate classification models
+* How to prepare Kaggle submissions
+
+This project is my first step into machine learning and data science, and I will continue improving my understanding through future projects.
+
+---
+
+# Future Improvements
+
+Possible improvements for future learning:
+
+* Better hyperparameter optimisation
+* Ensemble stacking/voting methods
+* More advanced feature engineering
+* Better validation strategies
+* Experiment tracking
+* Model deployment
+
+---
+
+## Final Note
+
+This repository represents my learning journey into machine learning. The project was built with significant AI assistance as a learning tool, while I focused on understanding the workflow, experimenting with models, and learning from the results.
