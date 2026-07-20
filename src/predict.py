@@ -45,9 +45,14 @@ features = [
     "Title",
     "FamilySize",
     "IsAlone",
-    "FamilyGroup",
+    "FamilySizeGroup",
+    "TicketGroupSize",
+    "Deck",
+    "CabinKnown",
+    "WomanChild",
     "FarePerPerson",
-    "TicketPrefix"
+    "AgeBand",
+    "FareBand"
 ]
 
 
